@@ -1,9 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { User } from "../types/User";
+import { useDispatch, useSelector } from "react-redux";
 import "./UserTable.css";
 import { Input, Table, Modal, Form, InputNumber, Pagination } from "antd";
+import { RootState, AppDispatch } from "../../store/index";
+import { fetchUsers } from "../../store/userSlice";
 
 const UserTable: React.FC = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  //引入userSlice数据
+  const { users, loading } = useSelector((state: RootState) => state.users);
+
+  useEffect(() => {
+    dispatch(fetchUsers());
+  }, [dispatch]);
+
   //表格主体部分
   // 分页状态
   const [currentPage, setCurrentPage] = useState(1);
@@ -32,7 +43,7 @@ const UserTable: React.FC = () => {
   ];
 
   // 计算当前页数据
-  const currentData = data.slice(
+  const currentData = users.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
@@ -47,15 +58,15 @@ const UserTable: React.FC = () => {
         className="table"
         columns={columns}
         rowKey="id"
-        pagination={false} // 禁用内置分页
-        bordered
+        loading={loading}
+        pagination={false}
       />
 
       {/* 独立分页器 */}
       <div className="paginationBox">
         <Pagination
           current={currentPage}
-          total={data.length}
+          total={users.length}
           pageSize={pageSize}
           onChange={(page) => setCurrentPage(page)}
           showSizeChanger={false}
