@@ -1,24 +1,84 @@
 import React, { useEffect, useState } from "react";
 import { User } from "../types/User";
 import { useDispatch, useSelector } from "react-redux";
-import "./UserTable.css";
-import { Input, Table, Modal, Form, InputNumber, Pagination } from "antd";
+import {
+  Input,
+  Table,
+  Button,
+  Modal,
+  Form,
+  InputNumber,
+  Pagination,
+} from "antd";
 import { RootState, AppDispatch } from "../../store/index";
-import { fetchUsers } from "../../store/userSlice";
+import {
+  fetchUsers,
+  addUser,
+  updateUser,
+  deleteUser,
+} from "../../store/userSlice";
+import "./UserTable.css";
 
+//表格界面
 const UserTable: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   //引入userSlice数据
   const { users, loading } = useSelector((state: RootState) => state.users);
 
+  // 判断增加用户框是否显示
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // 编辑用户
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+
+  // 添加表单实例
+  const [form] = Form.useForm();
+
+  // 添加搜索内容
+  const [searchValue, setSearchValue] = useState("");
+
   useEffect(() => {
     dispatch(fetchUsers());
   }, [dispatch]);
 
+  const handleSearch = (value: string) => {
+    setSearchValue(value);
+  };
+
+  const handleAdd = () => {
+    form.resetFields();
+    setEditingUser(null);
+    setIsModalOpen(true);
+  };
+
+  const handleEdit = (user: User) => {
+    form.setFieldsValue(user);
+    setEditingUser(user);
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = (id: number) => {
+    dispatch(deleteUser(id));
+  };
+
+  const handleOk = async () => {
+    try {
+      const values = await form.validateFields();
+      if (editingUser) {
+        dispatch(updateUser({ ...editingUser, ...values }));
+      } else {
+        dispatch(addUser(values));
+      }
+      setIsModalOpen(false);
+    } catch {
+      setIsModalOpen(true);
+    }
+  };
+
   //表格主体部分
   // 分页状态
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 5; // 每页显示5条数据
+  const pageSize = 7;
 
   // 列配置
   const columns = [
@@ -28,31 +88,50 @@ const UserTable: React.FC = () => {
     {
       title: "操作",
       width: "20%",
-      render: () => <a>编辑</a>, // 添加操作按钮
+      render: (_: any, record: User) => (
+        <>
+          <Button onClick={() => handleEdit(record)} style={{ marginRight: 8 }}>
+            编辑
+          </Button>
+          <Button danger onClick={() => handleDelete(record.id)}>
+            删除
+          </Button>
+        </>
+      ),
     },
   ];
 
-  // 测试数据
-  const data: User[] = [
-    { id: 1, name: "张三", age: 32, address: "北京市" },
-    { id: 2, name: "李四", age: 42, address: "上海市" },
-    { id: 3, name: "1", age: 22, address: "Beijing" },
-    { id: 4, name: "下半", age: 28, address: "Shanghai" },
-    { id: 5, name: "吴俊达", age: 12, address: "收到" },
-    { id: 6, name: "是", age: 1, address: "12 " },
-  ];
+  /* 计算当前页数据  */
+  function getCurrentData(searchValue: string) {
+    if (searchValue) {
+      return users.filter((user) => user.name.includes(searchValue));
+    } else {
+      return users.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+    }
+  }
 
-  // 计算当前页数据
-  const currentData = users.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
+  let currentData = getCurrentData(searchValue);
+  // 筛选目标用户
+  const filteredUsers = users.filter((user) => user.name.includes(searchValue));
 
   return (
     <div className="tableBox">
       <h1>用户信息管理系统</h1>
-      <Input.Search className="search" placeholder="搜索用户" />
-
+      <div className="searchBox">
+        <Input.Search
+          size="large"
+          className="search"
+          placeholder="请输入用户名"
+          value={searchValue}
+          onChange={(e) => setSearchValue(e.target.value)}
+          onSearch={(value) => {
+            handleSearch(value);
+          }}
+        />
+        <Button type="primary" onClick={handleAdd}>
+          添加用户
+        </Button>
+      </div>
       <Table
         dataSource={currentData}
         className="table"
@@ -61,8 +140,7 @@ const UserTable: React.FC = () => {
         loading={loading}
         pagination={false}
       />
-
-      {/* 独立分页器 */}
+      {/* 计算当前页数据 */}
       <div className="paginationBox">
         <Pagination
           current={currentPage}
@@ -73,6 +151,48 @@ const UserTable: React.FC = () => {
           showTotal={(total) => `共 ${total} 条`}
         />
       </div>
+      {/* 添加用户区 */}
+      <Modal
+        open={isModalOpen}
+        onOk={handleOk}
+        onCancel={() => setIsModalOpen(false)}
+      >
+        <Form form={form} layout="vertical">
+          <Form.Item
+            name="name"
+            label="姓名"
+            rules={[
+              { required: true, message: "请输入姓名" },
+              {
+                type: "string",
+                message: "请输入正确的姓名",
+              },
+            ]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            name="age"
+            label="年龄"
+            rules={[
+              { required: true, message: "请输入年龄" },
+              {
+                type: "number",
+                message: "年龄必须是数字",
+              },
+            ]}
+          >
+            <InputNumber min={0} />
+          </Form.Item>
+          <Form.Item
+            name="address"
+            label="地址"
+            rules={[{ required: true, message: "请输入地址" }]}
+          >
+            <Input />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };

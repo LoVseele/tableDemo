@@ -8,5 +8,8 @@ export const store = configureStore({
   },
 });
 
+//获取userStore的状态类型
 export type RootState = ReturnType<typeof store.getState>;
+
+//获取store的dispatch方法的类型
 export type AppDispatch = typeof store.dispatch;
