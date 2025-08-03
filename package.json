@@ -4,9 +4,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "webpack serve --mode development --open --port 3000",
+    "start": "webpack serve --mode development --open --port 8000",
     "build": "webpack --mode production",
-    "server": "json-server ./server/db.json --port 3001"
+    "server": "json-server ./server/db.json --port 8001"
   },
   "keywords": [],
   "author": "",
@@ -20,6 +20,8 @@
   },
   "devDependencies": {
     "@reduxjs/toolkit": "^2.8.2",
+    "@types/react": "^19.1.9",
+    "@types/react-dom": "^19.1.7",
     "css-loader": "^7.1.2",
     "html-webpack-plugin": "^5.6.3",
     "json-server": "^1.0.0-beta.3",
