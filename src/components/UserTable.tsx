@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import { User } from "../types/User";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -8,6 +8,7 @@ import {
   Modal,
   Form,
   InputNumber,
+  message,
   Pagination,
 } from "antd";
 import { RootState, AppDispatch } from "../../store/index";
@@ -26,7 +27,13 @@ const UserTable: React.FC = () => {
   const { users, loading } = useSelector((state: RootState) => state.users);
 
   // 判断增加用户框是否显示
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  // 判断删除用户提示框是否显示
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  //确认删除用户
+  const [deleteUserId, setdeleteUserId] = useState(0);
 
   // 编辑用户
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -48,20 +55,20 @@ const UserTable: React.FC = () => {
   const handleAdd = () => {
     form.resetFields();
     setEditingUser(null);
-    setIsModalOpen(true);
+    setIsAddModalOpen(true);
   };
 
   const handleEdit = (user: User) => {
     form.setFieldsValue(user);
     setEditingUser(user);
-    setIsModalOpen(true);
+    setIsAddModalOpen(true);
   };
 
   const handleDelete = (id: number) => {
     dispatch(deleteUser(id));
   };
 
-  const handleOk = async () => {
+  const handleAddOk = async () => {
     try {
       const values = await form.validateFields();
       if (editingUser) {
@@ -69,9 +76,9 @@ const UserTable: React.FC = () => {
       } else {
         dispatch(addUser(values));
       }
-      setIsModalOpen(false);
+      setIsAddModalOpen(false);
     } catch {
-      setIsModalOpen(true);
+      setIsAddModalOpen(true);
     }
   };
 
@@ -90,10 +97,21 @@ const UserTable: React.FC = () => {
       width: "20%",
       render: (_: any, record: User) => (
         <>
-          <Button onClick={() => handleEdit(record)} style={{ marginRight: 8 }}>
+          <Button
+            type="primary"
+            onClick={() => handleEdit(record)}
+            style={{ marginRight: 8 }}
+          >
             编辑
           </Button>
-          <Button danger onClick={() => handleDelete(record.id)}>
+          <Button
+            type="primary"
+            danger
+            onClick={() => {
+              setdeleteUserId(record.id);
+              setIsDeleteModalOpen(true);
+            }}
+          >
             删除
           </Button>
         </>
@@ -111,8 +129,6 @@ const UserTable: React.FC = () => {
   }
 
   let currentData = getCurrentData(searchValue);
-  // 筛选目标用户
-  const filteredUsers = users.filter((user) => user.name.includes(searchValue));
 
   return (
     <div className="tableBox">
@@ -122,8 +138,11 @@ const UserTable: React.FC = () => {
           size="large"
           className="search"
           placeholder="请输入用户名"
-          value={searchValue}
-          onChange={(e) => setSearchValue(e.target.value)}
+          onChange={(e) => {
+            if (!e.target.value) {
+              handleSearch("");
+            }
+          }}
           onSearch={(value) => {
             handleSearch(value);
           }}
@@ -153,9 +172,9 @@ const UserTable: React.FC = () => {
       </div>
       {/* 添加用户区 */}
       <Modal
-        open={isModalOpen}
-        onOk={handleOk}
-        onCancel={() => setIsModalOpen(false)}
+        open={isAddModalOpen}
+        onOk={handleAddOk}
+        onCancel={() => setIsAddModalOpen(false)}
       >
         <Form form={form} layout="vertical">
           <Form.Item
@@ -192,6 +211,19 @@ const UserTable: React.FC = () => {
             <Input />
           </Form.Item>
         </Form>
+      </Modal>
+      <Modal
+        open={isDeleteModalOpen}
+        onCancel={() => setIsDeleteModalOpen(false)}
+        okText="确认"
+        cancelText="取消"
+        onOk={() => {
+          handleDelete(deleteUserId);
+          setIsDeleteModalOpen(false);
+          setdeleteUserId(0);
+        }}
+      >
+        确定删除该用户数据吗？
       </Modal>
     </div>
   );
