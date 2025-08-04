@@ -9,5 +9,5 @@
     "moduleResolution": "node",
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src"]
+  "include": ["src", "store/thunks/userThunks.ts"]
 }

@@ -5,7 +5,7 @@ import {
   addUser,
   updateUser,
   deleteUser,
-} from "../../src/utils/api";
+} from "../thunks/userThunks";
 
 interface UserState {
   users: User[];

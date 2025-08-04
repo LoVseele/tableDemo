@@ -16,7 +16,7 @@ import {
   addUser,
   updateUser,
   deleteUser,
-} from "../../src/utils/api";
+} from "../../store/thunks/userThunks";
 import "./UserTable.css";
 
 //表格界面
