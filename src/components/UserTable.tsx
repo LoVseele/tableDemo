@@ -8,7 +8,6 @@ import {
   Modal,
   Form,
   InputNumber,
-  message,
   Pagination,
 } from "antd";
 import { RootState, AppDispatch } from "../../store/index";
@@ -17,7 +16,7 @@ import {
   addUser,
   updateUser,
   deleteUser,
-} from "../../store/userSlice";
+} from "../../src/utils/api";
 import "./UserTable.css";
 
 //表格界面
